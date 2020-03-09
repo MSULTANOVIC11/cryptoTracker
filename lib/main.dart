@@ -1,9 +1,3 @@
-/* 
-  Faire le fetch de l'API, car là ca ne marche pas il faut prendre le nom et l'id du data [1];
-
-
-*/
-
 import 'package:flutter/material.dart';
 import 'api.dart';
 import 'dart:async';
@@ -17,6 +11,12 @@ class CryptoTracker extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(title: Text("CryptoCurrency"), actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {}, //faire raffraichir la page
+          )
+        ]),
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.0),
@@ -34,7 +34,8 @@ class CryptoPage extends StatefulWidget {
 }
 
 class _CryptoPage extends State<CryptoPage> {
-  Future<CryptoData> futureCryptoData;
+  Future<List<dynamic>> futureCryptoData;
+  int i = 0;
 
   void initState() {
     super.initState();
@@ -43,33 +44,63 @@ class _CryptoPage extends State<CryptoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Text("Okay"),
-        CrypoCards(),
-        FutureBuilder<CryptoData>(
-          future: futureCryptoData,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              print(snapshot.data.name);
-              return Text("t");
-            } else if (snapshot.hasError) {
-              return Text("${snapshot.error}");
-            }
+    return Scaffold(
+      body: FutureBuilder<List<dynamic>>(
+        future: futureCryptoData,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return listViewWidget(snapshot.data);
+            //Create a listView with each crypto
+          }
 
-            // By default, show a loading spinner.
-            return CircularProgressIndicator();
-          },
-        ),
-      ],
+          return CircularProgressIndicator();
+          // By default, show a loading spinner.
+        },
+      ),
     );
   }
 }
 
-class CrypoCards extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return Card();
+Widget listViewWidget(List<dynamic> data) {
+  return Container(
+    child: ListView.builder(
+        itemCount: 20,
+        padding: const EdgeInsets.all(2.0),
+        itemBuilder: (context, position) {
+          return Card(
+            child: ListTile(
+              title: Text(
+                data[position]['name'],
+                style: TextStyle(
+                    fontSize: 18.0,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
+              ),
+              trailing: Text(
+                data[position]['quote']['USD']['percent_change_24h']
+                        .toString() +
+                    " %",
+                style: percentChange(
+                    data[position]['quote']['USD']['percent_change_24h']),
+              ),
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+              ),
+              subtitle: Text(
+                data[position]['quote']['USD']['price'].toString() + " \$",
+                style: TextStyle(
+                    color: Colors.orange[600], fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+        }),
+  );
+}
+
+TextStyle percentChange(double percent) {
+  if (percent < 0.0) {
+    return TextStyle(color: Colors.red, fontWeight: FontWeight.bold);
+  } else {
+    return TextStyle(color: Colors.green, fontWeight: FontWeight.bold);
   }
 }
